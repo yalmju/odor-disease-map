@@ -1,0 +1,9 @@
+{
+  "validation_tests": 5,
+  "fresh_OpenPOM_pair_inference": "passed CPU comparison with historical cache",
+  "embedding_max_abs_difference": 1.564621925354004e-06,
+  "descriptor_max_abs_difference": 6.556510925292969e-07,
+  "MLP_training_cli": "help/import passed; no retraining in this revision",
+  "Apple_Silicon": "not run",
+  "SERS_map_model": "not implemented"
+}
