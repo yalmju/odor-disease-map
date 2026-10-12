@@ -8,6 +8,7 @@ This folder restores previously developed research code omitted from the initial
 - `scripts/strengthen_rating_models.py`: additional rating model comparisons with supplied cache/split.
 - `src/voclib/odor_edit.py`: substitution enumeration and structure/odor comparisons.
 - `src/voclib/features.py`, `model.py`, `evaluate.py`: mixture representation/distance research prototype. This is not a validated A+B perceptual descriptor predictor or SERS classifier.
+- `scripts/channel_validation.py`: grouped validation for a per-pixel reporter-channel table (`film,map,analyte` + channel columns). Reports leave-one-map-out and leave-one-film-out accuracy next to the leaky random-pixel split, single-channel versus joint accuracy, a between-film / between-map / within-map variance split per channel, and a per-pixel channel scatter. NumPy and Matplotlib only; `--demo` runs a clearly labelled synthetic table that is not measurement data.
 
 SERS spatial-map classification and learned odor/SERS alignment are **not implemented in this package**. No placeholder results claim otherwise. Encoder training is not supplied. Upstream pretrained model: see examples/openpom_checkpoint_config.json for repository, pinned revision and checkpoint SHA-256. No weights or third-party database records are redistributed.
 
