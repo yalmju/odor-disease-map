@@ -6,6 +6,7 @@ from pptx.util import Inches, Pt
 from pptx.dml.color import RGBColor
 from pptx.enum.shapes import MSO_SHAPE
 from pptx.enum.text import PP_ALIGN, MSO_ANCHOR
+from pptx.oxml.ns import qn
 from PIL import Image
 
 SRC, DST = "OpticalNose_5min_v7.pptx", "OpticalNose_5min_v8.pptx"
@@ -215,6 +216,8 @@ PLAN = [
      "Indole + skatole reproduces neither pure pattern — the map changes, not just the amplitude."),
 ]
 
+PLAN = [e for e in PLAN if e[0] != 8]
+
 for idx, title, line in PLAN:
     sl = prs.slides[idx]
     drop_offslide(sl)
@@ -237,10 +240,77 @@ for idx, title, line in PLAN:
         takeaway(sl, line)
 
 
+# ========================================= SLIDE 9 - the closing slide
+sl = prs.slides[8]
+drop_offslide(sl)
+set_title(sl, "A mixture is not the sum of its parts")
+S9 = sl.shapes
+
+def dashed_box(S, x, y, w, h, label, size=11):
+    sh = S.add_shape(MSO_SHAPE.ROUNDED_RECTANGLE,
+                     Inches(x), Inches(y), Inches(w), Inches(h))
+    sh.adjustments[0] = 0.04
+    sh.fill.solid(); sh.fill.fore_color.rgb = rgb("white")
+    sh.line.color.rgb = RGBColor.from_string("BFBFC8"); sh.line.width = Pt(1.25)
+    ln = sh.line._get_or_add_ln()
+    ln.append(ln.makeelement(qn('a:prstDash'), {'val': 'dash'}))
+    sh.shadow.inherit = False
+    tf = sh.text_frame; tf.vertical_anchor = MSO_ANCHOR.MIDDLE
+    para = tf.paragraphs[0]; para.alignment = PP_ALIGN.CENTER
+    r = para.add_run(); r.text = label
+    r.font.size = Pt(size); r.font.bold = True
+    r.font.color.rgb = RGBColor.from_string("9A9AA0")
+    return sh
+
+# QR, top right
+textbox(S9, 9.35, 0.50, 2.35, 0.60,
+        [[("More information?", False)], [("Sniff here!", False)]],
+        size=15, color="ink", align=PP_ALIGN.RIGHT, spacing=1.15)
+dashed_box(S9, 11.80, 0.42, 1.02, 1.02, "QR", size=12)
+
+# the dot maps keep the left two thirds
+fig = main_figure(sl)
+fit(fig, Inches(0.90), Inches(1.52), Inches(7.75), Inches(3.34))
+
+# future work on the right
+fw = box(S9, 8.92, 1.52, 3.51, 3.34, "t_purple", radius=0.06)
+tf = fw.text_frame; tf.word_wrap = True
+tf.margin_left = tf.margin_right = Inches(0.20)
+tf.margin_top = Inches(0.18)
+p0 = tf.paragraphs[0]
+r = p0.add_run(); r.text = "Future work"
+r.font.size = Pt(16); r.font.bold = True; r.font.color.rgb = rgb("purple")
+for item in ("Extend the reporter set to cover more of the odor map",
+             "Link channel responses to disease-relevant VOC panels",
+             "Learn mixture composition from mixture spectra themselves"):
+    pp = tf.add_paragraph(); pp.line_spacing = 1.2; pp.space_before = Pt(10)
+    rr = pp.add_run(); rr.text = "\u2022  " + item
+    rr.font.size = Pt(12.5); rr.font.color.rgb = rgb("ink")
+
+# the claim the talk closes on
+bar9 = box(S9, 0.90, 4.98, 11.53, 0.78, "gray", radius=0.18)
+tf = bar9.text_frame; tf.word_wrap = True
+tf.vertical_anchor = MSO_ANCHOR.MIDDLE
+tf.margin_left = tf.margin_right = Inches(0.25)
+p0 = tf.paragraphs[0]; p0.alignment = PP_ALIGN.CENTER
+r = p0.add_run()
+r.text = "A chemically interpretable optical nose: patterns you measure, bands you name."
+r.font.size = Pt(17); r.font.bold = True; r.font.color.rgb = rgb("pink")
+
+# funding and institution marks
+textbox(S9, 0.90, 5.92, 8.10, 0.50,
+        [[("Research funding", True),
+          (": This work was supported by the National Research Foundation of Korea (NRF) "
+           "grant funded by the Korea government (MSIT) RS-2025-00560226.", False)]],
+        size=11, color="ink", spacing=1.15)
+dashed_box(S9, 9.60, 5.88, 1.60, 0.56, "NRF", size=10)
+dashed_box(S9, 11.35, 5.88, 1.08, 0.56, "KU", size=10)
+
+
 # ============================================ SLIDE 10 - the conclusion
 sl = prs.slides[9]
 drop_offslide(sl)
-set_title(sl, "A mixture writes its own fingerprint")
+set_title(sl, "Backup: quadrant medians")
 
 # the numbers in the right-hand box are already printed inside the figure,
 # so the box is dropped and the figure takes the space instead
@@ -279,25 +349,7 @@ for sh in sl.shapes:
         for extra in para.runs[1:]:
             extra.text = ""
     elif "Composition must be learned" in txt:
-        sh.left, sh.top = Inches(0.90), Inches(5.62)
-        sh.width, sh.height = Inches(11.53), Inches(0.92)
-        tf = sh.text_frame; tf.word_wrap = True
-        tf.vertical_anchor = MSO_ANCHOR.MIDDLE
-        tf.margin_left = tf.margin_right = Inches(0.22)
-        for para in tf.paragraphs[1:]:
-            para._p.getparent().remove(para._p)
-        p1 = tf.paragraphs[0]; p1.alignment = PP_ALIGN.CENTER
-        p1.runs[0].text = ("A chemically interpretable optical nose: "
-                           "patterns we can measure, bands we can name.")
-        p1.runs[0].font.size = Pt(18)
-        p1.runs[0].font.bold = True
-        p1.runs[0].font.color.rgb = rgb("pink")
-        for extra in p1.runs[1:]:
-            extra.text = ""
-        p2 = tf.add_paragraph(); p2.alignment = PP_ALIGN.CENTER
-        r2 = p2.add_run()
-        r2.text = "Next: more reporters across the odor map, and disease-relevant VOC panels."
-        r2.font.size = Pt(12); r2.font.bold = False; r2.font.color.rgb = rgb("mute")
+        sh._element.getparent().remove(sh._element)
 
 
 # ================================================== page numbers, last pass
