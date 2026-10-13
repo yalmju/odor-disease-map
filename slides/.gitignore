@@ -1,0 +1,9 @@
+# Third-party published figures and the working deck are NOT redistributed here.
+# See docs/DATA_SOURCES.md: no permission to redistribute third-party material is asserted.
+*.pptx
+!slide03-gap.pptx
+extracted/
+fig_cell.png
+fig_advmat.png
+fig_pom.png
+slide04-preview.png

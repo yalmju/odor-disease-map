@@ -1,0 +1,143 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Odor Gap Slide</title>
+<style>
+  :root{
+    --purple:#6B3F99; --teal:#1F8A8A; --pink:#D94F8A; --red:#C2410C; --green:#15803D;
+    --ink:#2B2B2B; --mute:#6E6E73;
+    --t-teal:#E9F4F4; --t-purple:#F3F0F7; --t-pink:#FCEEF4;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:Verdana,Geneva,"DejaVu Sans",sans-serif;color:var(--ink);background:#fff}
+  .slide{position:relative;width:1280px;height:720px;background:#fff;overflow:hidden}
+
+  .title{position:absolute;left:72px;top:42px;font-size:33px;font-weight:700;color:var(--purple)}
+  .sub{position:absolute;left:74px;top:90px;font-size:14.5px;color:var(--mute)}
+
+  .cols{position:absolute;left:72px;top:130px;width:1136px;height:408px;
+        display:grid;grid-template-columns:1fr 1fr 1fr;gap:20px}
+  .col{border-radius:16px;padding:16px 18px 14px;display:flex;flex-direction:column;align-items:center}
+  .c1{background:var(--t-teal)} .c2{background:var(--t-purple)}
+  .c3{background:var(--t-pink);outline:3px solid var(--pink);outline-offset:-3px}
+
+  .tag{padding:6px 16px;border-radius:8px;color:#fff;font-size:14px;font-weight:700;white-space:nowrap}
+  .g1{background:var(--teal)} .g2{background:var(--purple)} .g3{background:var(--pink)}
+
+  /* image slot for the published figures */
+  .slot{margin-top:11px;width:100%;height:184px;border-radius:10px;background:#fff;
+        display:flex;align-items:center;justify-content:center;overflow:hidden;position:relative}
+  .slot.ph{border:2px dashed #BFBFC8}
+  .slot img{max-width:100%;max-height:100%;object-fit:contain}
+  .ph-txt{font-size:12px;color:#9A9AA0;text-align:center;line-height:1.5;padding:0 12px}
+  .ph-txt b{color:#6E6E73}
+
+  .callout{position:absolute;right:8px;bottom:8px;background:#FFF1E8;color:var(--red);
+           font-size:11.5px;font-weight:700;border-radius:14px;padding:4px 10px}
+
+  .cite{margin-top:7px;font-size:10.5px;color:var(--mute);font-style:italic;text-align:center;height:14px}
+
+  .cap{margin-top:8px;font-size:13px;line-height:1.45;text-align:center;height:60px;
+       display:flex;align-items:center;justify-content:center}
+  .cap b{font-weight:700}
+
+  .chips{margin-top:9px;display:flex;gap:8px}
+  .chip{display:flex;align-items:center;gap:6px;background:#fff;border-radius:20px;
+        padding:6px 14px;font-size:13px;font-weight:700}
+  .yes{color:var(--green)} .no{color:var(--red)}
+  .chip .mk{font-size:15px;line-height:1}
+
+  .verdict{position:absolute;left:72px;top:558px;width:1136px;border-radius:14px;background:#EDEDED;
+           padding:15px 28px;font-size:15.5px;text-align:center;line-height:1.5}
+  .verdict b{color:var(--pink)}
+  .verdict .q{color:var(--mute)}
+
+  .band{position:absolute;left:0;top:696px;width:100%;height:24px;
+        background:linear-gradient(90deg,#1E6B35 0%,#2E8B46 42%,#9ECBA6 78%,#FFFFFF 100%)}
+  .mark{position:absolute;left:76px;top:648px;font-size:28px;font-weight:700;color:#E8412B;letter-spacing:-1px}
+  .pageno{position:absolute;right:28px;top:660px;font-size:12px;color:#8A8A8A}
+</style>
+</head>
+<body>
+<div class="slide">
+  <div class="title">How do we capture odor differences?</div>
+  <div class="sub">Machines copy the nose &mdash; so they inherit its blind spot.</div>
+
+  <div class="cols">
+
+    <!-- 1. HUMAN -->
+    <div class="col c1">
+      <span class="tag g1">Human nose</span>
+      <div class="slot ph">
+        <div class="ph-txt"><b>Cell 1999 figure here</b><br>odorants &times; receptors matrix<br>(crop to ~5 rows)</div>
+      </div>
+      <div class="cite">Malnic et al., Cell 96, 713 (1999)</div>
+      <div class="cap"><span>One odorant hits <b>many receptors</b>.<br><b>Identity is the pattern.</b></span></div>
+      <div class="chips">
+        <span class="chip yes"><span class="mk">&#10003;</span>pattern</span>
+        <span class="chip no"><span class="mk">&#10007;</span>chemistry</span>
+      </div>
+    </div>
+
+    <!-- 2. MACHINES -->
+    <div class="col c2">
+      <span class="tag g2">Machines today</span>
+      <div class="slot ph">
+        <div class="ph-txt"><b>Adv. Mater. 2024 figure here</b><br>panel b only: sensor array<br>&rarr; pattern recognition</div>
+        <span class="callout">pattern only &mdash; which molecule?</span>
+      </div>
+      <div class="cite">Adv. Mater. 36, 2402287 (2024)</div>
+      <div class="cap"><span>Arrays rebuild <b>the same pattern</b>,<br>with <b>less</b> chemical detail.</span></div>
+      <div class="chips">
+        <span class="chip yes"><span class="mk">&#10003;</span>pattern</span>
+        <span class="chip no"><span class="mk">&#10007;</span>chemistry</span>
+      </div>
+    </div>
+
+    <!-- 3. RAMAN -->
+    <div class="col c3">
+      <span class="tag g3">Raman &mdash; this work</span>
+      <div class="slot">
+        <svg width="320" height="190" viewBox="0 0 320 190" aria-label="One Raman spectrum carries many chemically specific bands">
+          <text x="14" y="22" font-size="11.5" fill="#6E6E73" font-family="Verdana">laser</text>
+          <path d="M16 38 L58 38" stroke="#D94F8A" stroke-width="3.5" marker-end="url(#a3)"/>
+          <defs><marker id="a3" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto">
+            <path d="M0,0 L8,4 L0,8 Z" fill="#D94F8A"/></marker></defs>
+          <g stroke="#D94F8A" stroke-width="2.5" fill="none">
+            <circle cx="78" cy="38" r="9"/><circle cx="100" cy="27" r="9"/><circle cx="100" cy="49" r="9"/>
+            <path d="M87 34 L91 29 M87 42 L91 47"/>
+          </g>
+          <text x="68" y="74" font-size="11.5" fill="#6E6E73" font-family="Verdana">molecule</text>
+          <text x="150" y="42" font-size="12.5" fill="#D94F8A" font-weight="bold" font-family="Verdana">each band = a bond</text>
+
+          <line x1="16" y1="156" x2="306" y2="156" stroke="#9A9AA0" stroke-width="1.6"/>
+          <g stroke="#D94F8A" stroke-width="2.6" fill="none" stroke-linejoin="round">
+            <path d="M16 156 L34 156 L40 112 L46 156 L64 156 L70 92 L76 156 L100 156 L106 128 L112 156
+                     L134 156 L140 84 L146 156 L166 156 L172 120 L178 156 L202 156 L208 100 L214 156
+                     L238 156 L244 134 L250 156 L268 156 L274 108 L280 156 L306 156"/>
+          </g>
+          <text x="16" y="176" font-size="11.5" fill="#6E6E73" font-family="Verdana">one spectrum = many chemical bands</text>
+        </svg>
+      </div>
+      <div class="cite">&nbsp;</div>
+      <div class="cap"><span>Hundreds of narrow bands at once.<br><b>Pattern and chemistry together.</b></span></div>
+      <div class="chips">
+        <span class="chip yes"><span class="mk">&#10003;</span>pattern</span>
+        <span class="chip yes"><span class="mk">&#10003;</span>chemistry</span>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="verdict">
+    <span class="q">GC&ndash;MS has the chemistry but not the pattern; the nose and the e-nose have the pattern but not the chemistry.</span><br>
+    &rarr;&nbsp; <b>Read the Raman spectrum as a fingerprint map.</b>
+  </div>
+
+  <div class="mark">&micro;TAS 2026</div>
+  <div class="pageno">03</div>
+  <div class="band"></div>
+</div>
+</body>
+</html>
