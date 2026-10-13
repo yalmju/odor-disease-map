@@ -1,4 +1,6 @@
-"""Rebuild slide 4 (the 'how do we capture odor differences' gap slide) inside the real deck."""
+"""Rebuild the gap slide inside the real deck, give every results slide a claim
+title and a takeaway line, and add a closing slide with results + next steps."""
+import copy
 from pptx import Presentation
 from pptx.util import Inches, Pt
 from pptx.dml.color import RGBColor
@@ -7,9 +9,9 @@ from pptx.enum.text import PP_ALIGN, MSO_ANCHOR
 from PIL import Image
 
 SRC, DST = "OpticalNose_5min_v7.pptx", "OpticalNose_5min_v8.pptx"
+CHECK, CROSS, ARROW = "✓", "✗", "→"
+
 prs = Presentation(SRC)
-slide = prs.slides[3]
-S = slide.shapes
 
 C = dict(purple="6B3F99", teal="1F8A8A", amber="C97A1E", pink="D94F8A",
          red="C2410C", green="15803D", ink="2B2B2B", mute="6E6E73",
@@ -17,18 +19,79 @@ C = dict(purple="6B3F99", teal="1F8A8A", amber="C97A1E", pink="D94F8A",
          gray="EDEDED", white="FFFFFF")
 def rgb(k): return RGBColor.from_string(C[k])
 
-# ---------- 1. clear the old pasted figure group ----------
+
+# ---------------------------------------------------------------- helpers
+def set_title(slide, text):
+    for sh in slide.shapes:
+        if sh.has_text_frame and sh.top < Inches(1.0) and sh.width > Inches(5):
+            para = sh.text_frame.paragraphs[0]
+            if para.runs:
+                para.runs[0].text = text
+                for extra in para.runs[1:]:
+                    extra.text = ""
+                return sh
+    return None
+
+
+def main_figure(slide):
+    """Largest picture or group on the slide that is actually on the canvas."""
+    best = None
+    for sh in slide.shapes:
+        if sh.shape_type not in (6, 13):           # GROUP, PICTURE
+            continue
+        if sh.top > Inches(9) or sh.top < Inches(-1):
+            continue
+        area = sh.width * sh.height
+        if best is None or area > best.width * best.height:
+            best = sh
+    return best
+
+
+def fit(sh, left, top, width, height):
+    """Scale a shape into the box, preserving aspect, centred."""
+    ar = sh.width / sh.height
+    w, h = width, width / ar
+    if h > height:
+        h, w = height, height * ar
+    sh.width, sh.height = int(w), int(h)
+    sh.left = int(left + (width - w) / 2)
+    sh.top = int(top)
+
+
+def drop_offslide(slide):
+    """Remove leftovers parked outside the canvas."""
+    H = prs.slide_height
+    for sh in list(slide.shapes):
+        if sh.top > H or sh.top + sh.height < 0:
+            sh._element.getparent().remove(sh._element)
+
+
+def takeaway(slide, text, y=5.76, h=0.62, color="teal", size=16):
+    S = slide.shapes
+    bar = S.add_shape(MSO_SHAPE.ROUNDED_RECTANGLE,
+                      Inches(0.90), Inches(y), Inches(11.53), Inches(h))
+    bar.adjustments[0] = 0.22
+    bar.fill.solid(); bar.fill.fore_color.rgb = rgb("gray")
+    bar.line.fill.background(); bar.shadow.inherit = False
+    tf = bar.text_frame; tf.word_wrap = True
+    tf.vertical_anchor = MSO_ANCHOR.MIDDLE
+    tf.margin_left = tf.margin_right = Inches(0.22)
+    p = tf.paragraphs[0]; p.alignment = PP_ALIGN.CENTER
+    r = p.add_run(); r.text = text
+    r.font.size = Pt(size); r.font.bold = True; r.font.color.rgb = rgb(color)
+    return bar
+
+
+# ================================================================ SLIDE 4
+slide = prs.slides[3]
+S = slide.shapes
 for sh in list(S):
-    if sh.shape_type == 6:                      # GROUP
+    if sh.shape_type == 6:
         sh._element.getparent().remove(sh._element)
+set_title(slide, "How do we capture odor differences?")
 
-# ---------- 2. title ----------
-for sh in S:
-    if sh.has_text_frame and "odor difference" in sh.text_frame.text:
-        r = sh.text_frame.paragraphs[0].runs[0]
-        r.text = "How do we capture odor differences?"
 
-def textbox(x, y, w, h, lines, size=12, color="ink", align=PP_ALIGN.LEFT,
+def textbox(S, x, y, w, h, lines, size=12, color="ink", align=PP_ALIGN.LEFT,
             anchor=MSO_ANCHOR.TOP, spacing=1.0, italic=False):
     tb = S.add_textbox(Inches(x), Inches(y), Inches(w), Inches(h))
     tf = tb.text_frame; tf.word_wrap = True
@@ -45,18 +108,19 @@ def textbox(x, y, w, h, lines, size=12, color="ink", align=PP_ALIGN.LEFT,
             r.font.color.rgb = rgb(color)
     return tb
 
-def box(x, y, w, h, fill, radius=0.08, line=None, lw=1.5):
-    sh = S.add_shape(MSO_SHAPE.ROUNDED_RECTANGLE, Inches(x), Inches(y), Inches(w), Inches(h))
+
+def box(S, x, y, w, h, fill, radius=0.08):
+    sh = S.add_shape(MSO_SHAPE.ROUNDED_RECTANGLE,
+                     Inches(x), Inches(y), Inches(w), Inches(h))
     sh.adjustments[0] = radius
     sh.fill.solid(); sh.fill.fore_color.rgb = rgb(fill)
-    if line: sh.line.color.rgb = rgb(line); sh.line.width = Pt(lw)
-    else: sh.line.fill.background()
-    sh.shadow.inherit = False
+    sh.line.fill.background(); sh.shadow.inherit = False
     sh.text_frame.text = ""
     return sh
 
-def pill(x, y, w, h, fill, label, size=13):
-    sh = box(x, y, w, h, fill, radius=0.3)
+
+def pill(S, x, y, w, h, fill, label, size=13):
+    sh = box(S, x, y, w, h, fill, radius=0.3)
     tf = sh.text_frame; tf.word_wrap = False
     tf.vertical_anchor = MSO_ANCHOR.MIDDLE
     p = tf.paragraphs[0]; p.alignment = PP_ALIGN.CENTER
@@ -64,86 +128,162 @@ def pill(x, y, w, h, fill, label, size=13):
     r.font.size = Pt(size); r.font.bold = True; r.font.color.rgb = rgb("white")
     return sh
 
-# ---------- 3. subtitle ----------
-textbox(0.92, 1.12, 11.5, 0.3,
-        "Three ways to read a smell today — each one keeps only part of it.",
+
+textbox(S, 0.92, 1.12, 11.5, 0.3,
+        "Three ways to read a smell today — and three different blind spots.",
         size=16, color="mute")
 
-# ---------- 4. columns ----------
 L, TOTAL, GAP = 0.90, 11.53, 0.24
 CW = (TOTAL - 2 * GAP) / 3
 TOP, CH = 1.52, 3.98
 
 COLS = [
     dict(tint="t_teal", accent="teal", tag="Human nose", tagw=1.95,
-         img="fig_cell.png",
-         cite="Malnic et al., Cell 96, 713 (1999)",
-         cap=[[("One odorant hits ", False), ("many receptors", True), (".", False)],
-              [("Identity is the pattern.", True)]],
-         chips=[("✓  pattern", "green", 1.30), ("✗  chemistry", "red", 1.45)]),
+         img="fig_cell.png", cite="Malnic et al., Cell 96, 713 (1999)",
+         cap=[[("One odorant hits many receptors,", False)],
+              [("but the answer is ", False), ("a word, not a number", True), (".", False)]],
+         chips=[(CHECK + "  any smell", "green", 1.60),
+                (CROSS + "  no number", "red", 1.65)]),
     dict(tint="t_purple", accent="purple", tag="Artificial nose", tagw=2.25,
-         img="fig_advmat.png",
-         cite="Adv. Mater. 36, 2402287 (2024)",
-         cap=[[("Sensor arrays copy ", False), ("the same pattern", True), (",", False)],
-              [("with ", False), ("less", True), (" chemical detail.", False)]],
-         chips=[("✓  pattern", "green", 1.30), ("✗  chemistry", "red", 1.45)]),
+         img="fig_advmat.png", cite="Adv. Mater. 36, 2402287 (2024)",
+         cap=[[("Sensor arrays copy that pattern", False)],
+              [("without saying ", False), ("which molecule", True), (".", False)]],
+         chips=[(CHECK + "  a number", "green", 1.65),
+                (CROSS + "  no molecule", "red", 1.90)]),
     dict(tint="t_amber", accent="amber", tag="Odor models", tagw=2.00,
-         img="fig_pom.png",
-         cite="Lee et al., Science 381, 6661 (2023)",
-         cap=[[("A learned map predicts odor,", False)],
-              [("but the ", False), ("molecule must be known", True), (".", False)]],
-         chips=[("✓  odor", "green", 1.15), ("✗  from a sample", "red", 1.80)]),
+         img="fig_pom.png", cite="Lee et al., Science 381, 6661 (2023)",
+         cap=[[("A learned map explains odor,", False)],
+              [("but the ", False), ("molecule must be known first", True), (".", False)]],
+         chips=[(CHECK + "  explains", "green", 1.60),
+                (CROSS + "  no sample", "red", 1.65)]),
 ]
 
 for i, c in enumerate(COLS):
     x = L + i * (CW + GAP)
-    box(x, TOP, CW, CH, c["tint"], radius=0.05)
+    box(S, x, TOP, CW, CH, c["tint"], radius=0.05)
+    pill(S, x + (CW - c["tagw"]) / 2, TOP + 0.12, c["tagw"], 0.34, c["accent"], c["tag"])
 
-    pill(x + (CW - c["tagw"]) / 2, TOP + 0.12, c["tagw"], 0.34, c["accent"], c["tag"])
-
-    # white figure slot
     sx, sy = x + 0.16, TOP + 0.55
     sw, sh_ = CW - 0.32, 1.80
-    box(sx, sy, sw, sh_, "white", radius=0.05)
-
-    # fit the picture inside the slot
+    box(S, sx, sy, sw, sh_, "white", radius=0.05)
     iw, ih = Image.open(c["img"]).size
     ar = iw / ih
     maxw, maxh = sw - 0.18, sh_ - 0.16
     w = maxw; h = w / ar
-    if h > maxh: h = maxh; w = h * ar
+    if h > maxh:
+        h = maxh; w = h * ar
     S.add_picture(c["img"], Inches(sx + (sw - w) / 2), Inches(sy + (sh_ - h) / 2),
                   width=Inches(w), height=Inches(h))
 
-    textbox(x + 0.10, TOP + 2.42, CW - 0.20, 0.22, c["cite"],
+    textbox(S, x + 0.10, TOP + 2.42, CW - 0.20, 0.22, c["cite"],
             size=9, color="mute", align=PP_ALIGN.CENTER, italic=True)
-
-    textbox(x + 0.14, TOP + 2.66, CW - 0.28, 0.60, c["cap"],
+    textbox(S, x + 0.14, TOP + 2.66, CW - 0.28, 0.60, c["cap"],
             size=13, color="ink", align=PP_ALIGN.CENTER, spacing=1.3)
 
     total_w = sum(w for _, _, w in c["chips"]) + 0.12
     bx = x + (CW - total_w) / 2
     for label, col, w in c["chips"]:
-        ch_ = box(bx, TOP + 3.30, w, 0.32, "white", radius=0.45)
+        ch_ = box(S, bx, TOP + 3.30, w, 0.32, "white", radius=0.45)
         tf = ch_.text_frame; tf.vertical_anchor = MSO_ANCHOR.MIDDLE
         p = tf.paragraphs[0]; p.alignment = PP_ALIGN.CENTER
         r = p.add_run(); r.text = label
         r.font.size = Pt(12); r.font.bold = True; r.font.color.rgb = rgb(col)
         bx += w + 0.12
 
-# ---------- 5. bottom bar ----------
-bar = box(L, 5.60, TOTAL, 0.88, "gray", radius=0.16)
+bar = box(S, L, 5.60, TOTAL, 0.88, "gray", radius=0.16)
 tf = bar.text_frame; tf.word_wrap = True
 tf.vertical_anchor = MSO_ANCHOR.MIDDLE
 tf.margin_left = tf.margin_right = Inches(0.25)
 p1 = tf.paragraphs[0]; p1.alignment = PP_ALIGN.CENTER
-r = p1.add_run(); r.text = "A pattern without chemistry, or chemistry without a measurement."
+r = p1.add_run(); r.text = "No number, no molecule, no sample."
 r.font.size = Pt(15); r.font.color.rgb = rgb("mute")
 p2 = tf.add_paragraph(); p2.alignment = PP_ALIGN.CENTER
-r = p2.add_run(); r.text = "→  Can we measure a real sample and keep both?"
+r = p2.add_run(); r.text = ARROW + "  Measure a real sample, and keep the molecule."
 r.font.size = Pt(17); r.font.bold = True; r.font.color.rgb = rgb("pink")
 
-# ---------- 6. fix page numbers on every slide ----------
+
+# ========================================================== SLIDES 5 - 9
+PLAN = [
+    (4, "Our approach: read odorants as Raman maps", None),
+    (5, "Three reporters, three binding chemistries",
+     "Charge transfer, hydrogen bonding and π–π stacking — one odorant leaves a different mark on each."),
+    (6, "Each channel answers differently",
+     "Band ratios shift by a different amount in each reporter channel."),
+    (7, "Each odorant gets its own signature",
+     "Indole, skatole and nonanal separate on the three-channel response pattern."),
+    (8, "A mixture is not the sum of its parts",
+     "Indole + skatole reproduces neither pure pattern — the map changes, not just the amplitude."),
+]
+
+for idx, title, line in PLAN:
+    sl = prs.slides[idx]
+    drop_offslide(sl)
+    set_title(sl, title)
+    fig = main_figure(sl)
+    if idx == 4:
+        # keep the existing question bar; make room above it
+        fit(fig, Inches(0.70), Inches(1.26), Inches(11.9), Inches(4.02))
+        for sh in sl.shapes:
+            if sh.has_text_frame and "Can Raman maps" in sh.text_frame.text:
+                sh.top, sh.height = Inches(5.46), Inches(1.00)
+    else:
+        fit(fig, Inches(0.70), Inches(1.22), Inches(11.9), Inches(4.40))
+        takeaway(sl, line)
+
+
+# =============================================================== SLIDE 10
+sl = prs.slides[9]
+drop_offslide(sl)
+set_title(sl, "Why a mixture breaks the sum rule")
+
+
+# ======================================================= NEW CLOSING SLIDE
+layout = prs.slides[9].slide_layout
+closing = prs.slides.add_slide(layout)
+S = closing.shapes
+
+textbox(S, 0.90, 0.52, 12.20, 0.61,
+        [[("Concluding remarks", True)]], size=36, color="purple")
+
+PANELS = [
+    dict(x=0.90, tint="t_teal", accent="teal", head="What we showed",
+         items=["Three reporter channels read one odorant as three different Raman responses",
+                "Indole, skatole and nonanal separate on that three-channel pattern",
+                "A mixture is not the linear sum of its pure spectra"]),
+    dict(x=6.86, tint="t_amber", accent="amber", head="What comes next",
+         items=["Extend the reporter set to cover more of the odor map",
+                "Link channel responses to disease-relevant VOC panels",
+                "Learn mixture composition from mixture spectra themselves"]),
+]
+PW, PTOP, PH = 5.57, 1.35, 3.95
+
+for p_ in PANELS:
+    box(S, p_["x"], PTOP, PW, PH, p_["tint"], radius=0.06)
+    pill(S, p_["x"] + 0.22, PTOP + 0.20, 2.55, 0.40, p_["accent"], p_["head"], size=15)
+    y = PTOP + 0.84
+    for it in p_["items"]:
+        dot = S.add_shape(MSO_SHAPE.OVAL, Inches(p_["x"] + 0.30), Inches(y + 0.10),
+                          Inches(0.11), Inches(0.11))
+        dot.fill.solid(); dot.fill.fore_color.rgb = rgb(p_["accent"])
+        dot.line.fill.background(); dot.shadow.inherit = False
+        textbox(S, p_["x"] + 0.54, y, PW - 0.84, 0.90, it,
+                size=14, color="ink", spacing=1.25)
+        y += 1.00
+
+takeaway(closing,
+         "A chemically interpretable optical nose: a pattern you can measure, and bands you can name.",
+         y=5.52, h=0.80, color="pink", size=17)
+
+
+# ================================================== page numbers, last pass
+tmpl = None
+for sh in prs.slides[3].shapes:
+    if sh.has_text_frame and sh.text_frame.text.strip().isdigit():
+        tmpl = sh
+        break
+if tmpl is not None:
+    closing.shapes._spTree.append(copy.deepcopy(tmpl._element))
+
 for n, sl in enumerate(prs.slides, start=1):
     for sh in sl.shapes:
         if sh.has_text_frame and sh.text_frame.text.strip().isdigit() and sh.left > Inches(12):
@@ -154,4 +294,4 @@ for n, sl in enumerate(prs.slides, start=1):
                     extra.text = ""
 
 prs.save(DST)
-print("saved", DST)
+print("saved", DST, "with", len(prs.slides.__iter__.__self__._sldIdLst), "slides")
