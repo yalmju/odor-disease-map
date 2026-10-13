@@ -237,59 +237,70 @@ for idx, title, line in PLAN:
         takeaway(sl, line)
 
 
-# =============================================================== SLIDE 10
+# ============================================ SLIDE 10 - the conclusion
 sl = prs.slides[9]
 drop_offslide(sl)
-set_title(sl, "Why a mixture breaks the sum rule")
+set_title(sl, "A mixture writes its own fingerprint")
 
+# the numbers in the right-hand box are already printed inside the figure,
+# so the box is dropped and the figure takes the space instead
+DROP = ("What happens in the mixture", "MBA: +1.6")
+for sh in list(sl.shapes):
+    if sh.has_text_frame and any(k in sh.text_frame.text for k in DROP):
+        sh._element.getparent().remove(sh._element)
+    elif sh.shape_type == 1 and sh.left > Inches(8.0) and sh.top < Inches(4.6):
+        sh._element.getparent().remove(sh._element)   # its backing panel and rule
 
-# ======================================================= NEW CLOSING SLIDE
-layout = prs.slides[9].slide_layout
-closing = prs.slides.add_slide(layout)
-S = closing.shapes
+fig = main_figure(sl)
+fit(fig, Inches(0.90), Inches(1.26), Inches(11.53), Inches(3.52))
 
-textbox(S, 0.90, 0.52, 12.20, 0.61,
-        [[("Concluding remarks", True)]], size=36, color="purple")
-
-PANELS = [
-    dict(x=0.90, tint="t_teal", accent="teal", head="What we showed",
-         items=["Three reporter channels read one odorant as three different Raman responses",
-                "Indole, skatole and nonanal separate on that three-channel pattern",
-                "A mixture is not the linear sum of its pure spectra"]),
-    dict(x=6.86, tint="t_amber", accent="amber", head="What comes next",
-         items=["Extend the reporter set to cover more of the odor map",
-                "Link channel responses to disease-relevant VOC panels",
-                "Learn mixture composition from mixture spectra themselves"]),
-]
-PW, PTOP, PH = 5.57, 1.35, 3.95
-
-for p_ in PANELS:
-    box(S, p_["x"], PTOP, PW, PH, p_["tint"], radius=0.06)
-    pill(S, p_["x"] + 0.22, PTOP + 0.20, 2.55, 0.40, p_["accent"], p_["head"], size=15)
-    y = PTOP + 0.84
-    for it in p_["items"]:
-        dot = S.add_shape(MSO_SHAPE.OVAL, Inches(p_["x"] + 0.30), Inches(y + 0.10),
-                          Inches(0.11), Inches(0.11))
-        dot.fill.solid(); dot.fill.fore_color.rgb = rgb(p_["accent"])
-        dot.line.fill.background(); dot.shadow.inherit = False
-        textbox(S, p_["x"] + 0.54, y, PW - 0.84, 0.90, it,
-                size=14, color="ink", spacing=1.25)
-        y += 1.00
-
-takeaway(closing,
-         "A chemically interpretable optical nose: a pattern you can measure, and bands you can name.",
-         y=5.52, h=0.80, color="pink", size=17)
+for sh in sl.shapes:
+    if not sh.has_text_frame:
+        continue
+    txt = sh.text_frame.text
+    if "Quadrant medians" in txt:
+        sh.left, sh.top, sh.width = Inches(0.90), Inches(4.86), Inches(11.53)
+        for para in sh.text_frame.paragraphs:
+            para.alignment = PP_ALIGN.CENTER
+    elif "competitive adsorption" in txt.lower():
+        sh.left, sh.top = Inches(0.90), Inches(5.06)
+        sh.width, sh.height = Inches(11.53), Inches(0.50)
+        tf = sh.text_frame; tf.word_wrap = True
+        tf.vertical_anchor = MSO_ANCHOR.MIDDLE
+        tf.margin_left = tf.margin_right = Inches(0.22)
+        for para in tf.paragraphs[1:]:
+            para._p.getparent().remove(para._p)
+        para = tf.paragraphs[0]; para.alignment = PP_ALIGN.CENTER
+        para.runs[0].text = ("Three different patterns \u2014 competitive adsorption, "
+                             "not a linear sum.")
+        para.runs[0].font.size = Pt(14)
+        para.runs[0].font.bold = False
+        para.runs[0].font.color.rgb = rgb("mute")
+        for extra in para.runs[1:]:
+            extra.text = ""
+    elif "Composition must be learned" in txt:
+        sh.left, sh.top = Inches(0.90), Inches(5.62)
+        sh.width, sh.height = Inches(11.53), Inches(0.92)
+        tf = sh.text_frame; tf.word_wrap = True
+        tf.vertical_anchor = MSO_ANCHOR.MIDDLE
+        tf.margin_left = tf.margin_right = Inches(0.22)
+        for para in tf.paragraphs[1:]:
+            para._p.getparent().remove(para._p)
+        p1 = tf.paragraphs[0]; p1.alignment = PP_ALIGN.CENTER
+        p1.runs[0].text = ("A chemically interpretable optical nose: "
+                           "patterns we can measure, bands we can name.")
+        p1.runs[0].font.size = Pt(18)
+        p1.runs[0].font.bold = True
+        p1.runs[0].font.color.rgb = rgb("pink")
+        for extra in p1.runs[1:]:
+            extra.text = ""
+        p2 = tf.add_paragraph(); p2.alignment = PP_ALIGN.CENTER
+        r2 = p2.add_run()
+        r2.text = "Next: more reporters across the odor map, and disease-relevant VOC panels."
+        r2.font.size = Pt(12); r2.font.bold = False; r2.font.color.rgb = rgb("mute")
 
 
 # ================================================== page numbers, last pass
-tmpl = None
-for sh in prs.slides[3].shapes:
-    if sh.has_text_frame and sh.text_frame.text.strip().isdigit():
-        tmpl = sh
-        break
-if tmpl is not None:
-    closing.shapes._spTree.append(copy.deepcopy(tmpl._element))
-
 for n, sl in enumerate(prs.slides, start=1):
     for sh in sl.shapes:
         if sh.has_text_frame and sh.text_frame.text.strip().isdigit() and sh.left > Inches(12):
