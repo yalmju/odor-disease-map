@@ -226,6 +226,12 @@ for idx, title, line in PLAN:
         for sh in sl.shapes:
             if sh.has_text_frame and "Can Raman maps" in sh.text_frame.text:
                 sh.top, sh.height = Inches(5.46), Inches(1.00)
+                paras = sh.text_frame.paragraphs
+                for para, text in zip(paras, ["Can Raman maps of a few receptors",
+                                              "make these differences visible and explainable?"]):
+                    para.runs[0].text = text
+                    for extra in para.runs[1:]:
+                        extra.text = ""
     else:
         fit(fig, Inches(0.70), Inches(1.22), Inches(11.9), Inches(4.40))
         takeaway(sl, line)
