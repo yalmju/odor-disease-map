@@ -307,49 +307,13 @@ dashed_box(S9, 9.60, 5.88, 1.60, 0.56, "NRF", size=10)
 dashed_box(S9, 11.35, 5.88, 1.08, 0.56, "KU", size=10)
 
 
-# ============================================ SLIDE 10 - the conclusion
-sl = prs.slides[9]
-drop_offslide(sl)
-set_title(sl, "Backup: quadrant medians")
-
-# the numbers in the right-hand box are already printed inside the figure,
-# so the box is dropped and the figure takes the space instead
-DROP = ("What happens in the mixture", "MBA: +1.6")
-for sh in list(sl.shapes):
-    if sh.has_text_frame and any(k in sh.text_frame.text for k in DROP):
-        sh._element.getparent().remove(sh._element)
-    elif sh.shape_type == 1 and sh.left > Inches(8.0) and sh.top < Inches(4.6):
-        sh._element.getparent().remove(sh._element)   # its backing panel and rule
-
-fig = main_figure(sl)
-fit(fig, Inches(0.90), Inches(1.26), Inches(11.53), Inches(3.52))
-
-for sh in sl.shapes:
-    if not sh.has_text_frame:
-        continue
-    txt = sh.text_frame.text
-    if "Quadrant medians" in txt:
-        sh.left, sh.top, sh.width = Inches(0.90), Inches(4.86), Inches(11.53)
-        for para in sh.text_frame.paragraphs:
-            para.alignment = PP_ALIGN.CENTER
-    elif "competitive adsorption" in txt.lower():
-        sh.left, sh.top = Inches(0.90), Inches(5.06)
-        sh.width, sh.height = Inches(11.53), Inches(0.50)
-        tf = sh.text_frame; tf.word_wrap = True
-        tf.vertical_anchor = MSO_ANCHOR.MIDDLE
-        tf.margin_left = tf.margin_right = Inches(0.22)
-        for para in tf.paragraphs[1:]:
-            para._p.getparent().remove(para._p)
-        para = tf.paragraphs[0]; para.alignment = PP_ALIGN.CENTER
-        para.runs[0].text = ("Three different patterns \u2014 competitive adsorption, "
-                             "not a linear sum.")
-        para.runs[0].font.size = Pt(14)
-        para.runs[0].font.bold = False
-        para.runs[0].font.color.rgb = rgb("mute")
-        for extra in para.runs[1:]:
-            extra.text = ""
-    elif "Composition must be learned" in txt:
-        sh._element.getparent().remove(sh._element)
+# ===================================== SLIDE 10 - dropped (no Q&A time)
+# The quadrant medians are a reduction of the maps already shown on the
+# closing slide, and the talk has no question time to spend on them.
+sld_lst = prs.slides._sldIdLst
+to_drop = list(sld_lst)[9]
+prs.part.drop_rel(to_drop.rId)
+sld_lst.remove(to_drop)
 
 
 # ================================================== page numbers, last pass
