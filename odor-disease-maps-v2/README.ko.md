@@ -17,6 +17,10 @@ python scripts/render_maps.py --input private_data/evidence_overlay.json --outpu
 
 Arial 설치가 없으면 기본 DejaVu Sans를 사용하세요. Windows에서 실행 검증했으며 Apple Silicon 실제 실행은 아직 검증하지 않았습니다. GPU는 필요하지 않습니다.
 
+## 대장암 분자 확장 지도 (선택)
+
+대장암 관련 분자를 지도에 더하고, OpenPOM 예측 향 패널과 비교쌍 순위를 계산하는 스크립트(`place_by_embedding.py`, `render_crc_expansion.py`, `render_pom_facets.py`, `pair_ranking.py`)가 있습니다. 기존 좌표는 바꾸지 않습니다. 실행 순서와 해석상의 주의는 [docs/CRC_EXPANSION.ko.md](docs/CRC_EXPANSION.ko.md)를 보세요. 이 스크립트들은 `rdkit`이 필요하고, 위치 계산 단계만 OpenPOM 환경에서 실행합니다.
+
 ## GitHub에 올릴 파일
 
 공개용 ZIP만 업로드하세요. 개인 재현용 ZIP은 별도 보관합니다. 코드 라이선스는 아직 지정하지 않았고 DB 주석의 재배포 허가도 확인 전입니다. `.gitignore`가 private_data와 생성 결과를 제외합니다. 현재 GitHub 저장소 생성·push는 하지 않았습니다.

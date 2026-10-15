@@ -56,3 +56,7 @@ Candidate evidence is computed directly from original embeddings:
 python scripts/candidate_evidence.py --cache private_data/inference_cache.npz --annotations private_data/evidence_overlay.json --out results/candidate
 ```
 The result is post-hoc support for the comparison pair, not a validated prospective selection rule.
+
+## Colorectal-cancer map expansion (optional)
+
+`scripts/place_by_embedding.py`, `render_crc_expansion.py`, `render_pom_facets.py` and `pair_ranking.py` add curated colorectal-cancer-linked molecules (`data/crc_additions_curated.csv`, HMDB and in-house GC-MS literature evidence) to the fixed map, draw OpenPOM-predicted odor facets, and rank disease-discordant pairs in embedding space. Original coordinates are never changed; added molecules are placed by cosine 5-NN in the frozen embedding space (leave-one-out error is reported). These scripts need `rdkit`; only the placement step needs the OpenPOM environment. See [docs/CRC_EXPANSION.ko.md](docs/CRC_EXPANSION.ko.md).
