@@ -1,135 +1,133 @@
-"""Build the project TOC graphic: where a smell sits, and what it looks like."""
+"""Project TOC graphic: where a smell sits, and what it looks like.
+
+Deliberately few text blocks — a TOC is read in one glance. Everything that
+is not the headline, the two panel labels and the closing line was cut.
+"""
 import math, random, re
 
 W, H = 1600, 860
-PINK, BLUE, AMBER = "#D94F8A", "#4A5899", "#C97A1E"
+PINK, BLUE = "#D94F8A", "#4A5899"
 PURPLE, INK, MUTE = "#6B3F99", "#2B2B2B", "#6E6E73"
-GRAYPT, LINE = "#D7D7DD", "#C8C8D0"
+GRAYPT, LINE = "#D5D5DC", "#C8C8D0"
+F = 'font-family="Arial, Helvetica, sans-serif"'
 
 rnd = random.Random(20261123)
 
 
 def odor_space(x0, y0, w, h):
-    """Stylized odor-space cloud: soft quality regions plus a scatter."""
     out = []
-    blobs = [(0.28, 0.30, 0.17, "#D9C84F"), (0.62, 0.24, 0.15, PINK),
-             (0.76, 0.58, 0.16, "#5BA85B"), (0.33, 0.70, 0.18, "#8A6FC4"),
-             (0.52, 0.48, 0.14, "#4FA3A3")]
-    for i, (cx, cy, r, col) in enumerate(blobs):
-        out.append(f'<circle cx="{x0+cx*w:.0f}" cy="{y0+cy*h:.0f}" r="{r*min(w,h):.0f}" '
-                   f'fill="{col}" opacity="0.13"/>')
-    for _ in range(560):
-        bx, by, br, _c = blobs[rnd.randrange(len(blobs))]
-        a, d = rnd.uniform(0, 2 * math.pi), abs(rnd.gauss(0, .55)) * br
-        px, py = x0 + (bx + d * math.cos(a)) * w, y0 + (by + d * math.sin(a)) * h
-        if x0 + 6 < px < x0 + w - 6 and y0 + 6 < py < y0 + h - 6:
-            out.append(f'<circle cx="{px:.1f}" cy="{py:.1f}" r="2.6" fill="{GRAYPT}"/>')
-    # disease-linked subset, deliberately spread across regions
+    blobs = [(0.26, 0.28, 0.19, "#D9C84F"), (0.64, 0.22, 0.17, PINK),
+             (0.78, 0.60, 0.18, "#5BA85B"), (0.30, 0.72, 0.20, "#8A6FC4"),
+             (0.52, 0.49, 0.16, "#4FA3A3")]
+    for cx, cy, r, col in blobs:
+        out.append(f'<circle cx="{x0+cx*w:.0f}" cy="{y0+cy*h:.0f}" '
+                   f'r="{r*min(w,h):.0f}" fill="{col}" opacity="0.14"/>')
+    for _ in range(760):
+        bx, by, br, _ = blobs[rnd.randrange(len(blobs))]
+        a, d = rnd.uniform(0, 2*math.pi), abs(rnd.gauss(0, .55))*br
+        px, py = x0 + (bx + d*math.cos(a))*w, y0 + (by + d*math.sin(a))*h
+        if x0+8 < px < x0+w-8 and y0+8 < py < y0+h-8:
+            out.append(f'<circle cx="{px:.1f}" cy="{py:.1f}" r="3.4" fill="{GRAYPT}"/>')
     for _ in range(38):
-        bx, by, br, _c = blobs[rnd.randrange(len(blobs))]
-        a, d = rnd.uniform(0, 2 * math.pi), abs(rnd.gauss(0, .5)) * br
-        px, py = x0 + (bx + d * math.cos(a)) * w, y0 + (by + d * math.sin(a)) * h
-        if x0 + 6 < px < x0 + w - 6 and y0 + 6 < py < y0 + h - 6:
-            out.append(f'<circle cx="{px:.1f}" cy="{py:.1f}" r="4.6" fill="{PINK}" opacity="0.92"/>')
+        bx, by, br, _ = blobs[rnd.randrange(len(blobs))]
+        a, d = rnd.uniform(0, 2*math.pi), abs(rnd.gauss(0, .5))*br
+        px, py = x0 + (bx + d*math.cos(a))*w, y0 + (by + d*math.sin(a))*h
+        if x0+8 < px < x0+w-8 and y0+8 < py < y0+h-8:
+            out.append(f'<circle cx="{px:.1f}" cy="{py:.1f}" r="6.4" fill="{PINK}"/>')
     return "\n".join(out)
 
 
-def channel_tile(x0, y0, size, seed, hue_lo=BLUE, hue_hi=PINK):
-    """A 7x7 dot map on a blue-white-pink diverging scale."""
+def tile(x0, y0, size, seed):
     r = random.Random(seed)
-    n, pad = 7, 6
-    step = (size - 2 * pad) / n
-    base = r.uniform(-1, 1)
-    out = [f'<rect x="{x0}" y="{y0}" width="{size}" height="{size}" rx="7" fill="#FFFFFF" stroke="{LINE}"/>']
+    n, pad = 9, 7
+    step = (size - 2*pad) / n
+    base = r.uniform(-.9, .9)
+    out = [f'<rect x="{x0}" y="{y0}" width="{size}" height="{size}" rx="9" '
+           f'fill="#FFFFFF" stroke="{LINE}"/>']
     for i in range(n):
         for j in range(n):
-            v = max(-1, min(1, base + r.gauss(0, .45)))
-            col, op = (hue_hi, abs(v)) if v >= 0 else (hue_lo, abs(v))
-            cx = x0 + pad + step * (j + .5)
-            cy = y0 + pad + step * (i + .5)
-            out.append(f'<circle cx="{cx:.1f}" cy="{cy:.1f}" r="{step*0.33:.1f}" '
-                       f'fill="{col}" opacity="{0.12+0.8*op:.2f}"/>')
+            v = max(-1, min(1, base + r.gauss(0, .42)))
+            col = PINK if v >= 0 else BLUE
+            out.append(f'<circle cx="{x0+pad+step*(j+.5):.1f}" cy="{y0+pad+step*(i+.5):.1f}" '
+                       f'r="{step*0.36:.1f}" fill="{col}" opacity="{0.10+0.85*abs(v):.2f}"/>')
     return "\n".join(out)
 
 
-def mol_svg(path, x, y, w, h):
-    """Inline an RDKit SVG as a positioned group."""
+def mol(path, x, y, w, h):
     s = open(path).read()
-    s = re.sub(r"<\?xml.*?\?>", "", s, flags=re.S)
-    s = re.sub(r"<!DOCTYPE.*?>", "", s, flags=re.S)
-    m = re.search(r"<svg[^>]*>(.*)</svg>", s, flags=re.S)
-    body = m.group(1)
-    body = re.sub(r"<rect[^>]*style='opacity:1\.0;fill:#FFFFFF[^>]*/>", "", body)
-    return (f'<g transform="translate({x},{y}) scale({w/300:.4f},{h/220:.4f})">{body}</g>')
+    s = re.sub(r"<\?xml.*?\?>|<!DOCTYPE.*?>", "", s, flags=re.S)
+    body = re.search(r"<svg[^>]*>(.*)</svg>", s, flags=re.S).group(1)
+    body = re.sub(r"<rect[^>]*fill:#FFFFFF[^>]*/>", "", body)
+    return f'<g transform="translate({x},{y}) scale({w/300:.4f},{h/220:.4f})">{body}</g>'
 
 
 svg = [f'<svg xmlns="http://www.w3.org/2000/svg" width="{W}" height="{H}" viewBox="0 0 {W} {H}">',
-       f'<rect width="{W}" height="{H}" fill="#FFFFFF"/>']
+       f'<rect width="{W}" height="{H}" fill="#FFFFFF"/>',
+       f'<text x="{W/2}" y="74" {F} font-size="44" font-weight="bold" fill="{PURPLE}" '
+       f'text-anchor="middle">Where a smell sits &#8212; and what it looks like</text>']
 
-F = 'font-family="Arial, Helvetica, sans-serif"'
+PY_TOP, PH = 124, 596
 
-# ---- headline
-svg.append(f'<text x="60" y="76" {F} font-size="40" font-weight="bold" fill="{PURPLE}">'
-           f'Where a smell sits &#8212; and what it looks like</text>')
-svg.append(f'<text x="60" y="114" {F} font-size="22" fill="{MUTE}">'
-           f'Disease-relevant odorants on a learned odor map, read out as three-channel Raman patterns</text>')
+# ---------------- left: chemical space
+LX, LW = 60, 660
+svg.append(f'<rect x="{LX}" y="{PY_TOP}" width="{LW}" height="{PH}" rx="20" '
+           f'fill="#FAFAFC" stroke="{LINE}"/>')
+svg.append(f'<text x="{LX+LW/2}" y="{PY_TOP+48}" {F} font-size="30" font-weight="bold" '
+           f'fill="{INK}" text-anchor="middle">Chemical space</text>')
+svg.append(odor_space(LX+28, PY_TOP+72, LW-56, PH-150))
 
-# ---- left: chemical space
-LX, LY, LW, LH = 60, 158, 560, 540
-svg.append(f'<rect x="{LX}" y="{LY}" width="{LW}" height="{LH}" rx="18" fill="#FAFAFC" stroke="{LINE}"/>')
-svg.append(f'<text x="{LX+24}" y="{LY+44}" {F} font-size="25" font-weight="bold" fill="{INK}">Chemical space</text>')
-svg.append(f'<text x="{LX+24}" y="{LY+74}" {F} font-size="18" fill="{MUTE}">532 odorants, placed by learned odor perception</text>')
-svg.append(odor_space(LX + 26, LY + 96, LW - 52, LH - 168))
+fx, fy = LX + 0.62*LW, PY_TOP + 72 + 0.26*(PH-150)
+svg.append(f'<circle cx="{fx:.0f}" cy="{fy:.0f}" r="14" fill="#FFFFFF" stroke="{INK}" stroke-width="3.5"/>')
+svg.append(f'<circle cx="{fx+34:.0f}" cy="{fy-16:.0f}" r="14" fill="{PINK}" stroke="{INK}" stroke-width="3.5"/>')
+svg.append(f'<text x="{fx-54:.0f}" y="{fy+9:.0f}" {F} font-size="26" font-weight="bold" fill="{INK}">1</text>')
+svg.append(f'<text x="{fx+60:.0f}" y="{fy-9:.0f}" {F} font-size="26" font-weight="bold" fill="{INK}">2</text>')
+svg.append(f'<text x="{LX+LW/2}" y="{PY_TOP+PH-28}" {F} font-size="21" fill="{MUTE}" text-anchor="middle">'
+           f'<tspan fill="{PINK}" font-weight="bold">&#9679;</tspan> disease-linked, spread across odor qualities</text>')
 
-# two adjacent focal points
-fx, fy = LX + 0.60 * LW, LY + 96 + 0.30 * (LH - 168)
-svg.append(f'<circle cx="{fx:.0f}" cy="{fy:.0f}" r="11" fill="#FFFFFF" stroke="{INK}" stroke-width="3"/>')
-svg.append(f'<circle cx="{fx+26:.0f}" cy="{fy-12:.0f}" r="11" fill="{PINK}" stroke="{INK}" stroke-width="3"/>')
-svg.append(f'<text x="{fx-46:.0f}" y="{fy+8:.0f}" {F} font-size="19" font-weight="bold" fill="{INK}">1</text>')
-svg.append(f'<text x="{fx+48:.0f}" y="{fy-8:.0f}" {F} font-size="19" font-weight="bold" fill="{INK}">2</text>')
-svg.append(f'<text x="{LX+24}" y="{LY+LH-44}" {F} font-size="19" fill="{INK}">'
-           f'<tspan fill="{PINK}" font-weight="bold">&#9679;</tspan> disease-linked &#183; spread across odor qualities</text>')
-svg.append(f'<text x="{LX+24}" y="{LY+LH-18}" {F} font-size="19" fill="{INK}">'
-           f'<tspan font-weight="bold">1, 2</tspan> one methyl apart, yet neighbours</text>')
-
-# ---- arrow
-AX = LX + LW + 26
-svg.append(f'<path d="M{AX} {LY+LH/2} L{AX+58} {LY+LH/2}" stroke="{MUTE}" stroke-width="4" marker-end="url(#ar)"/>')
+# ---------------- arrow
+AX = LX + LW + 24
 svg.append(f'<defs><marker id="ar" markerWidth="9" markerHeight="9" refX="8" refY="4.5" orient="auto">'
            f'<path d="M0,0 L9,4.5 L0,9 Z" fill="{MUTE}"/></marker></defs>')
+svg.append(f'<path d="M{AX} {PY_TOP+PH/2} L{AX+54} {PY_TOP+PH/2}" stroke="{MUTE}" '
+           f'stroke-width="5" marker-end="url(#ar)"/>')
 
-# ---- right: odor pattern
-RX, RY, RW, RH = AX + 96, 158, W - (AX + 96) - 60, 540
-svg.append(f'<rect x="{RX}" y="{RY}" width="{RW}" height="{RH}" rx="18" fill="#FDF7FA" stroke="{PINK}" stroke-width="2.5"/>')
-svg.append(f'<text x="{RX+24}" y="{RY+44}" {F} font-size="25" font-weight="bold" fill="{INK}">Odor pattern</text>')
-svg.append(f'<text x="{RX+24}" y="{RY+74}" {F} font-size="18" fill="{MUTE}">one molecule &#8594; three reporter channels, mapped in space</text>')
+# ---------------- right: odor pattern
+RX = AX + 92
+RW = W - RX - 60
+svg.append(f'<rect x="{RX}" y="{PY_TOP}" width="{RW}" height="{PH}" rx="20" '
+           f'fill="#FDF7FA" stroke="{PINK}" stroke-width="3"/>')
+svg.append(f'<text x="{RX+RW/2}" y="{PY_TOP+48}" {F} font-size="30" font-weight="bold" '
+           f'fill="{INK}" text-anchor="middle">Odor pattern</text>')
 
-TILE, GAP = 128, 16
-cols = ["4-MBA", "4-MPY", "2-NAT"]
-for k, c in enumerate(cols):
-    cx = RX + 196 + k * (TILE + GAP) + TILE / 2
-    svg.append(f'<text x="{cx:.0f}" y="{RY+112}" {F} font-size="18" fill="{MUTE}" text-anchor="middle">{c}</text>')
+TILE, GAP, MOLW = 162, 18, 150
+grid_w = MOLW + 3*TILE + 2*GAP
+gx = RX + (RW - grid_w) / 2
 
-rows = [("1", "indole.svg", 1), ("2", "skatole.svg", 2)]
-for ri, (lab, molf, seed0) in enumerate(rows):
-    ry = RY + 130 + ri * (TILE + 46)
-    svg.append(f'<text x="{RX+28}" y="{ry+TILE/2+8:.0f}" {F} font-size="22" font-weight="bold" fill="{INK}">{lab}</text>')
-    svg.append(mol_svg(molf, RX + 48, ry - 14, 150, TILE + 28))
+for k, c in enumerate(("4-MBA", "4-MPY", "2-NAT")):
+    svg.append(f'<text x="{gx+MOLW+k*(TILE+GAP)+TILE/2:.0f}" y="{PY_TOP+100}" {F} '
+               f'font-size="21" fill="{MUTE}" text-anchor="middle">{c}</text>')
+
+for ri, (lab, f_, seed0) in enumerate((("1", "indole.svg", 1), ("2", "skatole.svg", 2))):
+    ry = PY_TOP + 120 + ri*(TILE + 36)
+    svg.append(f'<text x="{gx-16:.0f}" y="{ry+TILE/2+10:.0f}" {F} font-size="26" '
+               f'font-weight="bold" fill="{INK}" text-anchor="end">{lab}</text>')
+    svg.append(mol(f_, gx, ry - 10, MOLW, TILE + 20))
     for k in range(3):
-        svg.append(channel_tile(RX + 196 + k * (TILE + GAP), ry, TILE, seed0 * 31 + k * 7))
+        svg.append(tile(gx + MOLW + k*(TILE+GAP), ry, TILE, seed0*31 + k*7))
 
-svg.append(f'<text x="{RX+24}" y="{RY+RH-20}" {F} font-size="19" fill="{INK}">'
-           f'Neighbours on the map, <tspan font-weight="bold">different under the array</tspan></text>')
+svg.append(f'<text x="{RX+RW/2}" y="{PY_TOP+PH-28}" {F} font-size="21" fill="{MUTE}" '
+           f'text-anchor="middle">one methyl apart &#183; neighbours on the map &#183; '
+           f'<tspan font-weight="bold" fill="{INK}">distinct under the array</tspan></text>')
 
-# ---- footer claim
-svg.append(f'<rect x="60" y="{H-118}" width="{W-120}" height="62" rx="14" fill="#EDEDED"/>')
-svg.append(f'<text x="{W/2}" y="{H-78}" {F} font-size="25" font-weight="bold" fill="{PINK}" text-anchor="middle">'
+# ---------------- closing line
+svg.append(f'<text x="{W/2}" y="{H-36}" {F} font-size="27" font-weight="bold" '
+           f'fill="{PINK}" text-anchor="middle">'
            f'A chemically interpretable optical nose: patterns you measure, bands you name.</text>')
 
-# honesty marker: the tiles are drawn, not measured. Delete this block once
-# the real per-channel maps are dropped in.
-svg.append(f'<text x="{W-62}" y="{H-130}" {F} font-size="15" fill="#B5B5BD" text-anchor="end">'
-           f'illustrative layout &#183; replace tiles with measured maps</text>')
+# honesty marker: the scatter and tiles are drawn, not measured.
+# Delete this line once the real figures are dropped in.
+svg.append(f'<text x="{W-60}" y="{H-84}" {F} font-size="15" fill="#BFBFC6" '
+           f'text-anchor="end">illustrative layout</text>')
 
 svg.append("</svg>")
 open("toc.svg", "w").write("\n".join(svg))

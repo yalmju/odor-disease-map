@@ -9,6 +9,10 @@ google-chrome --headless --disable-gpu --no-sandbox --hide-scrollbars \
   --window-size=1600,1100 --screenshot=_raw.png _v.html   # see git history for _v.html
 ```
 
+The layout keeps text to a minimum on purpose: a headline, two panel labels,
+two one-line captions and the closing claim. An earlier draft had nine text
+blocks and read as cramped.
+
 `indole.svg` / `skatole.svg` are RDKit depictions. Skatole is laid out on
 indole's own coordinates (`GenerateDepictionMatching2DStructure`) so the shared
 ring system is in the same orientation and the 3-methyl is the only visible
